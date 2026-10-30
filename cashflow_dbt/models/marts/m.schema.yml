@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: fct_cashflow
-    description: One row per transaction, with readable category, region and payment mode.
+    description: One row per transaction, with its class, readable category, region and payment mode, and the rules that decide whether it counts.
     columns:
       - name: transaction_id
         data_tests: [unique, not_null]
@@ -11,12 +11,25 @@ models:
           - accepted_values:
               arguments:
                 values: ['Eldoret', 'Makueni', 'Mombasa', 'Nairobi', 'Vihiga', 'Unknown']
+      - name: flow_group
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['income_received', 'business_and_transfer_costs', 'household_spending',
+                         'financial', 'assets', 'not_a_cash_flow']
+      - name: in_scope
+        data_tests: [not_null]
   - name: fct_daily_cashflow
-    description: Daily inflow, outflow and net cash flow per region (reportable rows only).
+    description: Daily income, business costs, spending, operating net and financial flows per region (in-scope rows only).
     columns:
       - name: region
         data_tests: [not_null]
       - name: transaction_date
         data_tests: [not_null]
   - name: fct_weekly_cashflow
-    description: Weekly version of the daily summary.
+    description: Weekly version of the daily table.
+  - name: fct_cashflow_anomalies
+    description: Daily operating net cash flow per region, flagged when it is more than 2 standard deviations below the previous 28 days (needs at least 14 days of history).
+    columns:
+      - name: is_unusual_drop
+        data_tests: [not_null]
