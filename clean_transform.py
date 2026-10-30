@@ -29,7 +29,7 @@ DATE_COLS = [
     "int_date", "first_int_date",
 ]
 
-# words that mean "no value"; remove any that are real answers in the data
+# words that mean "no value"
 MISSING_MARKERS = {"", "n/a", "na", "none", "null", "nan", "-"}
 
 # IDs: only strip stray spaces
@@ -81,13 +81,21 @@ def standardise(df):
 def build_columns(df):
     out = pd.DataFrame(index=df.index)
 
-    # The file's trx_id is NOT unique (its long numbers were rounded), so we make our own key
+    # The file's trx_id is NOT unique (its long numbers were rounded), so make our own key
     out["transaction_id"]   = np.arange(1, len(df) + 1)
     out["source_trx_id"]    = df["trx_id"]          # kept for reference only
     out["household_id"]     = df["hh_ids"]
     out["transaction_date"] = df["trx_date_clean"]
     out["week_start"]       = df["trx_date_clean"].dt.to_period("W").dt.start_time
     out["amount"]           = df["trx_value_kes"]
+
+    # what kind of transaction it is, and what the study excludes
+    out["class_code"]       = df["trx_class_code"]                   # income, opex, findev, assets, cash
+    out["diary_round"]      = df["trx_dq_round"].astype("Int64")     # whole number, so it loads into SMALLINT
+    out["months_observed"]  = df["trx_stdtime_mnths_hh"]
+    out["is_research_gift"] = df["ddd_gift"].eq(1)
+    out["is_fee"]           = df["trx_fee"].eq(1)
+    out["is_in_kind"]       = df["trx_mode_desc_std"].str.startswith("in-kind", na=False).astype(bool)
 
     # direction (uses the tidy column)
     out["direction"] = df["trx_direction_std"].astype("object").map(direction_map)
@@ -107,21 +115,26 @@ def build_columns(df):
     out["standardised_region"]   = df["site_code"].map(SITE_TO_REGION)
     out["mode_of_payment"]       = df["trx_mode_desc_std"].str.title()
 
-    # large shock: above the 99th percentile for its direction
+    # large shock: above the 99th percent for its direction
     cutoff = out.groupby("direction")["amount"].transform(lambda s: s.quantile(0.99))
     out["is_large_shock"] = out["amount"] > cutoff
 
     # quality flag: first problem found wins, blank if the row is fine
+    is_balance = df["trx_mode_desc_std"].isin(BALANCE_MODES) | df["account_startclose_balance"].notna()
     conditions = [
         out["transaction_date"].isna(),
-        df["trx_mode_desc_std"].isin(BALANCE_MODES),
+        is_balance,                                                      # starting or closing balance (a stock)
+        df["trx_class_code"].eq("cash"),                                 # cash on hand or lost: not a cash flow
         out["amount"].isna(),
+        out["direction"].isna() & out["is_fee"],                         # automatic fee: not a cash flow
+        out["direction"].isna() & df["trx_bsheet_direction"].notna(),    # moves a balance, not household cash
         out["direction"].isna(),
         out["amount"] <= 0,
         df.duplicated(keep="first"),
         out["is_large_shock"],
     ]
-    labels = ["bad_date", "balance_record", "missing_amount", "unknown_direction",
+    labels = ["bad_date", "balance_record", "cash_on_hand_record", "missing_amount",
+              "non_cash_fee", "balance_sheet_movement", "unknown_direction",
               "zero_or_negative_amount", "possible_duplicate", "large_shock"]
     conditions = [pd.Series(c, index=out.index).fillna(False).astype(bool).to_numpy()
                   for c in conditions]
@@ -150,6 +163,8 @@ def main():
     print("Year match:", (df["trx_date_clean"].dt.year == df["trx_year"]).mean())
     print("Month match:", (df["trx_date_clean"].dt.month == df["trx_month"]).mean())
     print(out["quality_flag"].value_counts(dropna=False))
+    print("\n--- classes (the README lists income 114,417, opex 283,942, findev 77,070) ---")
+    print(out["class_code"].value_counts(dropna=False))
 
     print("\n--- region check (households per region) ---")
     households = out.drop_duplicates("household_id")
