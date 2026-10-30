@@ -9,5 +9,11 @@ select
     category_id,
     mode_id,
     is_large_shock,
-    quality_flag
+    quality_flag,
+    class_code,
+    diary_round,
+    months_observed,
+    is_research_gift,
+    is_fee,
+    is_in_kind
 from {{ source('clean', 'household_cashflow_clean') }}

@@ -1,4 +1,3 @@
-
 version: 2
 
 models:
@@ -13,12 +12,19 @@ models:
               arguments:
                 to: ref('stg_households')
                 field: household_id
+      - name: class_code
+        data_tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['income', 'opex', 'findev', 'assets', 'cash']
       - name: quality_flag
         data_tests:
           - accepted_values:
               arguments:
-                values: ['bad_date', 'balance_record', 'missing_amount', 'balance_sheet_movement',
-                         'unknown_direction', 'zero_or_negative_amount', 'possible_duplicate', 'large_shock']
+                values: ['bad_date', 'balance_record', 'cash_on_hand_record', 'missing_amount',
+                         'non_cash_fee', 'balance_sheet_movement', 'unknown_direction',
+                         'zero_or_negative_amount', 'possible_duplicate', 'large_shock']
   - name: stg_households
     columns:
       - name: household_id
