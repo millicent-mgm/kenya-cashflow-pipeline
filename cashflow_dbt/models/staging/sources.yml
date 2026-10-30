@@ -1,0 +1,12 @@
+version: 2
+
+sources:
+  - name: clean
+    schema: clean
+    description: Tables loaded by load_postgres.py from the cleaned CSV files
+    tables:
+      - name: household_cashflow_clean
+      - name: dim_household
+      - name: dim_region
+      - name: dim_category
+      - name: dim_mode

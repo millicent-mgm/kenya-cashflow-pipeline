@@ -1,0 +1,25 @@
+
+version: 2
+
+models:
+  - name: stg_household_cashflow
+    columns:
+      - name: transaction_id
+        data_tests: [unique, not_null]
+      - name: household_id
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_households')
+                field: household_id
+      - name: quality_flag
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['bad_date', 'balance_record', 'missing_amount', 'balance_sheet_movement',
+                         'unknown_direction', 'zero_or_negative_amount', 'possible_duplicate', 'large_shock']
+  - name: stg_households
+    columns:
+      - name: household_id
+        data_tests: [unique, not_null]

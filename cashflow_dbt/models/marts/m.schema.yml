@@ -1,0 +1,22 @@
+version: 2
+
+models:
+  - name: fct_cashflow
+    description: One row per transaction, with readable category, region and payment mode.
+    columns:
+      - name: transaction_id
+        data_tests: [unique, not_null]
+      - name: region
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Eldoret', 'Makueni', 'Mombasa', 'Nairobi', 'Vihiga', 'Unknown']
+  - name: fct_daily_cashflow
+    description: Daily inflow, outflow and net cash flow per region (reportable rows only).
+    columns:
+      - name: region
+        data_tests: [not_null]
+      - name: transaction_date
+        data_tests: [not_null]
+  - name: fct_weekly_cashflow
+    description: Weekly version of the daily summary.
