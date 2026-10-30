@@ -1,5 +1,9 @@
 -- Schema for the Kenya Financial Diaries cash-flow pipeline (PostgreSQL)
 
+-- To start over (this DELETES everything in the clean schema), remove the two dashes in front of the
+-- next line, run the file once, then put the dashes back:
+-- DROP SCHEMA IF EXISTS clean CASCADE;
+
 CREATE SCHEMA IF NOT EXISTS clean;
 
 CREATE TABLE IF NOT EXISTS clean.dim_region (  -- creates the region table
@@ -31,7 +35,7 @@ CREATE TABLE IF NOT EXISTS clean.household_cashflow_clean (  --creates the main/
     transaction_id   BIGINT PRIMARY KEY,
     source_trx_id    BIGINT,
     household_id     TEXT   NOT NULL REFERENCES clean.dim_household (household_id), --  FOREIGN KEY
-    transaction_date DATE,  --  FOREIGN ID
+    transaction_date DATE,  --  the day the money moved (blank if the date was bad)
     week_start       DATE,
     amount           NUMERIC(14,2),  --  exact decimals (up to 14 digits, 2 after point)
     direction        TEXT CHECK (direction IN ('inflow', 'outflow')),
@@ -40,10 +44,16 @@ CREATE TABLE IF NOT EXISTS clean.household_cashflow_clean (  --creates the main/
     mode_id          INT REFERENCES clean.dim_mode (mode_id),  --  FOREIGN KEY
     is_large_shock   BOOLEAN,
     quality_flag     TEXT CHECK (quality_flag IS NULL OR quality_flag IN (
-                         'bad_date', 'balance_record', 'missing_amount', 'balance_sheet_movement',
-                         'unknown_direction', 'zero_or_negative_amount', 'possible_duplicate',
-                         'large_shock')),
-    CHECK (direction IS NULL     -- A direction must be inflow or outflow (or blank), a flag must be one of the eight labels, and an inflow can’t have a negative signed amount.
+                         'bad_date', 'balance_record', 'cash_on_hand_record', 'missing_amount',
+                         'non_cash_fee', 'balance_sheet_movement', 'unknown_direction',
+                         'zero_or_negative_amount', 'possible_duplicate', 'large_shock')),
+    class_code       TEXT NOT NULL CHECK (class_code IN ('income', 'opex', 'findev', 'assets', 'cash')),
+    diary_round      SMALLINT,                 -- which diary round the transaction belongs to
+    months_observed  INT,                      -- months the household had been observed
+    is_research_gift BOOLEAN,                  -- a gift from the research firm, not real income
+    is_fee           BOOLEAN,                  -- a fee charged on an account
+    is_in_kind       BOOLEAN,                  -- paid in goods or labour, not money
+    CHECK (direction IS NULL     -- A direction must be inflow or outflow (or blank), a flag must be one of the ten labels, the class one of the five README classes, and an inflow can't have a negative signed amount.
            OR (direction = 'inflow'  AND signed_amount >= 0)
            OR (direction = 'outflow' AND signed_amount <= 0))
 );

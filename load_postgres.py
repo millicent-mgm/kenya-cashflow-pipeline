@@ -20,8 +20,9 @@ PROCESSED = Path("data/processed")  #folder with the 5 csv files
 LOAD_ORDER = ["dim_region", "dim_household", "dim_category", "dim_mode", "household_cashflow_clean"]
 
 #allowed flags for quality chcek
-ALLOWED_FLAGS = {"bad_date", "balance_record", "missing_amount", "balance_sheet_movement",
-                 "unknown_direction", "zero_or_negative_amount", "possible_duplicate", "large_shock"}
+ALLOWED_FLAGS = {"bad_date", "balance_record", "cash_on_hand_record", "missing_amount", "non_cash_fee",
+                 "balance_sheet_movement", "unknown_direction", "zero_or_negative_amount",
+                 "possible_duplicate", "large_shock"}
 
 #this functions counts rows in each csv file
 def count_csv_rows(path):
