@@ -1,12 +1,11 @@
 from pathlib import Path 
 import pandas as pd
 
-from clean_transform import load_raw, clean_dates, standardise, build_columns #loading the cleaned data
+from clean_transform import clean_dates, standardise, build_columns #loading the cleaned data
 from extract import setup_logging, extract
 
 setup_logging()
 df = extract()
-df = load_raw()
 df = clean_dates(df)
 df = standardise(df)
 out = build_columns(df)
@@ -57,6 +56,7 @@ household_cashflow_clean = out[[
     "transaction_id", "source_trx_id", "household_id", "transaction_date", "week_start",
     "amount", "direction", "signed_amount", "category_id", "mode_id",
     "is_large_shock", "quality_flag",
+    "class_code", "diary_round", "months_observed", "is_research_gift", "is_fee", "is_in_kind",
 ]]
 
 print(household_cashflow_clean.shape)
