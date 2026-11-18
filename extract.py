@@ -1,3 +1,4 @@
+# this file runs 5 chcks in order and the first one that fails stops the whole pipeline with a message logged
 import logging
 import sys
 import time
@@ -14,7 +15,7 @@ EXPECTED_N_COLS = 58
 MIN_ROWS = 400_000
 LOG_FILE = Path("logs/pipeline.log")
 
-def setup_logging():
+def setup_logging():  #prepares the diary.every message gets a timestamp
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
@@ -49,7 +50,7 @@ def extract(path=RAW_FILE):
         sys.exit(1)
 
     # checks for missing columns
-    missing = [c for c in REQUIRED_COLS if c not in df.columns]
+    missing = [c for c in REQUIRED_COLS if c not in df.columns]  #list comprehension
     if missing:
         log.error("Missing required columns: %s", missing)
         sys.exit(1)

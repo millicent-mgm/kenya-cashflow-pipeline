@@ -7,3 +7,5 @@ screenshots/
 *.png
 target/
 dbt_packages/
+
+!docs/*.png

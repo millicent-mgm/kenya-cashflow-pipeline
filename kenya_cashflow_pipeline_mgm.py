@@ -1,7 +1,7 @@
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta 
 
 from airflow.sdk import DAG
-from airflow.providers.standard.operators.bash import BashOperator
+from airflow.providers.standard.operators.bash import BashOperator   #runs a command in the terminal
 from airflow.providers.standard.operators.empty import EmptyOperator
 
 # Airflow runs inside WSL, but the project, Python, the libraries and PostgreSQL are on Windows.
@@ -20,7 +20,7 @@ with DAG(
     description="Kenya Financial Diaries: extract, transform, load, then dbt build and test",
     default_args=default_args,
     start_date=datetime(2026, 10, 1),
-    schedule="@weekly",                    # the brief asks for weekly refreshes; you can also trigger it by hand
+    schedule="@weekly",                    # the brief asks for weekly refreshes can also trigger it by hand
     catchup=False,
     tags=["capstone", "cashflow"],
 ) as dag:

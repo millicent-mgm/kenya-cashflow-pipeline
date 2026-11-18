@@ -8,7 +8,7 @@ import pandas as pd
 import psycopg2   #talks to postgres SQL
 from dotenv import load_dotenv
 
-from extract import setup_logging    #borrows the log setup already wrote in extract.py
+from extract import setup_logging    #borrows the log setup already wrote in extract.py for diary messages in logs
 
 load_dotenv()       #reads.env file, where the password is
 log = logging.getLogger("load")    #creates the writer i’ll use for messages, labelled load.
@@ -76,7 +76,7 @@ def copy_csv(cur, table, path):
         f.seek(0)
         cur.copy_expert(   #sends the command the file together
             f"COPY clean.{table} ({columns}) FROM STDIN WITH (FORMAT csv, HEADER true)", f) #is PostgreSQL’s bulk-loading command.
-        #It reads a whole file in one go, which is far faster than adding rows one by one#
+        #It reads a whole file in one go, which is far faster than adding rows one by one
 
 #this now loads the list of tables
 def load_tables(cur, tables):

@@ -67,6 +67,7 @@ print("households not in dim:", (~fact["household_id"].isin(dim_household["house
 print("missing category / mode ids:", fact["category_id"].isna().sum(), fact["mode_id"].isna().sum())
 print("households with no region:", dim_household["region_id"].isna().sum())
 
+# saving the files
 out_dir = Path("data/processed")
 out_dir.mkdir(parents=True, exist_ok=True)
 

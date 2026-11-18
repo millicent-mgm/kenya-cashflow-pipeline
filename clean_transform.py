@@ -78,10 +78,10 @@ def standardise(df):
     return df
 
 
-def build_columns(df):
+def build_columns(df):   #starts with an empty table called out
     out = pd.DataFrame(index=df.index)
 
-    # The file's trx_id is NOT unique (its long numbers were rounded), so make our own key
+    # The file's trx_id is NOT unique (its long numbers were rounded), so make own key
     out["transaction_id"]   = np.arange(1, len(df) + 1)
     out["source_trx_id"]    = df["trx_id"]          # kept for reference only
     out["household_id"]     = df["hh_ids"]
@@ -93,15 +93,15 @@ def build_columns(df):
     out["class_code"]       = df["trx_class_code"]                   # income, opex, findev, assets, cash
     out["diary_round"]      = df["trx_dq_round"].astype("Int64")     # whole number, so it loads into SMALLINT
     out["months_observed"]  = df["trx_stdtime_mnths_hh"]
-    out["is_research_gift"] = df["ddd_gift"].eq(1)
-    out["is_fee"]           = df["trx_fee"].eq(1)
+    out["is_research_gift"] = df["ddd_gift"].eq(1)   #is it a yes or no
+    out["is_fee"]           = df["trx_fee"].eq(1)    #is it a yes or no
     out["is_in_kind"]       = df["trx_mode_desc_std"].str.startswith("in-kind", na=False).astype(bool)
 
     # direction (uses the tidy column)
     out["direction"] = df["trx_direction_std"].astype("object").map(direction_map)
 
     # signed amount: + for inflow, - for outflow
-    amt = out["amount"].abs()
+    amt = out["amount"].abs()    #takes any size of the amount ignoring any sign
     out["signed_amount"] = np.select(
         [out["direction"] == "inflow", out["direction"] == "outflow"],
         [amt, -amt],
@@ -119,7 +119,7 @@ def build_columns(df):
     cutoff = out.groupby("direction")["amount"].transform(lambda s: s.quantile(0.99))
     out["is_large_shock"] = out["amount"] > cutoff
 
-    # quality flag: first problem found wins, blank if the row is fine
+    # quality flag: questions and their label
     is_balance = df["trx_mode_desc_std"].isin(BALANCE_MODES) | df["account_startclose_balance"].notna()
     conditions = [
         out["transaction_date"].isna(),
@@ -137,7 +137,7 @@ def build_columns(df):
               "non_cash_fee", "balance_sheet_movement", "unknown_direction",
               "zero_or_negative_amount", "possible_duplicate", "large_shock"]
     conditions = [pd.Series(c, index=out.index).fillna(False).astype(bool).to_numpy()
-                  for c in conditions]
+                  for c in conditions]   #makes sure every row has a true or false
     out["quality_flag"] = pd.Series(np.select(conditions, labels, default=""),
                                     index=out.index).replace("", pd.NA)
     return out

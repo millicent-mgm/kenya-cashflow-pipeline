@@ -1,7 +1,6 @@
 -- Schema for the Kenya Financial Diaries cash-flow pipeline (PostgreSQL)
 
--- To start over (this DELETES everything in the clean schema), remove the two dashes in front of the
--- next line, run the file once, then put the dashes back:
+-- (this DELETES everything in the clean schema), 
 -- DROP SCHEMA IF EXISTS clean CASCADE;
 
 CREATE SCHEMA IF NOT EXISTS clean;
@@ -42,7 +41,7 @@ CREATE TABLE IF NOT EXISTS clean.household_cashflow_clean (  --creates the main/
     signed_amount    NUMERIC(14,2),  --  exact decimals (up to 14 digits, 2 after point)
     category_id      INT REFERENCES clean.dim_category (category_id),  -- FOREIGN KEY
     mode_id          INT REFERENCES clean.dim_mode (mode_id),  --  FOREIGN KEY
-    is_large_shock   BOOLEAN,
+    is_large_shock   BOOLEAN,  -- true or false
     quality_flag     TEXT CHECK (quality_flag IS NULL OR quality_flag IN (
                          'bad_date', 'balance_record', 'cash_on_hand_record', 'missing_amount',
                          'non_cash_fee', 'balance_sheet_movement', 'unknown_direction',
